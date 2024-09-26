@@ -27,19 +27,23 @@ public class profileEventPublisher {
     }
 
     public void publishProfileEvent(UserProfile userProfile) {
-        // Convert UserProfile to UserProfileDTO
+        // Konverter UserProfile til UserProfileDTO
         UserProfileDTO userProfileDTO = UserProfileMapper.toDTO(userProfile);
 
         try {
-            // Convert DTO to JSON string using ObjectMapper
+            // Konverter DTO til JSON-streng ved bruk av ObjectMapper
             String event = objectMapper.writeValueAsString(userProfileDTO);
-            // Send the event to RabbitMQ
+
+            // Send meldingen til RabbitMQ
             amqpTemplate.convertAndSend(exchangeName, "profile.created", event);
-            log.info("Published 'profile.created' event for user: {}", userProfileDTO.getName());
+
+            // Legg til logging for å bekrefte at meldingen blir sendt
+            log.info("Published 'profile.created' event for user: {} with message: {}", userProfileDTO.getName(), event);
         } catch (JsonProcessingException e) {
             log.error("Error while serializing UserProfileDTO to JSON", e);
         }
     }
 }
+
 
 

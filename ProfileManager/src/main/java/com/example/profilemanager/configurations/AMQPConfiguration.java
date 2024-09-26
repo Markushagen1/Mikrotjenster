@@ -1,29 +1,50 @@
 package com.example.profilemanager.configurations;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
-import org.springframework.amqp.rabbit.annotation.RabbitListenerConfigurer;
+import org.springframework.amqp.core.TopicExchange;
+import org.springframework.amqp.rabbit.connection.CachingConnectionFactory;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.messaging.converter.MappingJackson2MessageConverter;
-import org.springframework.messaging.handler.annotation.support.DefaultMessageHandlerMethodFactory;
-import org.springframework.messaging.handler.annotation.support.MessageHandlerMethodFactory;
+import org.springframework.beans.factory.annotation.Value;
 
 @Configuration
 public class AMQPConfiguration {
 
+    // Exchange Bean
     @Bean
-    public MessageHandlerMethodFactory messageHandlerMethodFactory() {
-        DefaultMessageHandlerMethodFactory factory = new DefaultMessageHandlerMethodFactory();
-        final MappingJackson2MessageConverter jsonConverter = new MappingJackson2MessageConverter();
-        jsonConverter.getObjectMapper().registerModule(new ParameterNamesModule(JsonCreator.Mode.PROPERTIES));
-        factory.setMessageConverter(jsonConverter);
-        return factory;
+    public TopicExchange profileExchange(
+            @Value("${amqp.exchange.name}") final String exchangeName
+    ) {
+        return new TopicExchange(exchangeName, true, false);
+    }
+
+    // Connection Factory for RabbitMQ
+    @Bean
+    public CachingConnectionFactory connectionFactory() {
+        CachingConnectionFactory connectionFactory = new CachingConnectionFactory();
+        connectionFactory.setHost("localhost");
+        connectionFactory.setPort(5672);
+        connectionFactory.setUsername("guest");
+        connectionFactory.setPassword("guest");
+        return connectionFactory;
+    }
+
+    // Message Converter for Jackson JSON support
+    @Bean
+    public Jackson2JsonMessageConverter jackson2MessageConverter() {
+        return new Jackson2JsonMessageConverter();
     }
 
     @Bean
-    public RabbitListenerConfigurer rabbitListenerConfigurer(final MessageHandlerMethodFactory messageHandlerMethodFactory) {
-        return (c) -> c.setMessageHandlerMethodFactory(messageHandlerMethodFactory);
+    public RabbitTemplate rabbitTemplate(CachingConnectionFactory connectionFactory,
+                                         Jackson2JsonMessageConverter jackson2MessageConverter) {
+        RabbitTemplate rabbitTemplate = new RabbitTemplate(connectionFactory);
+        rabbitTemplate.setMessageConverter(jackson2MessageConverter);
+        return rabbitTemplate;
     }
 }
+
+
+
 
