@@ -11,6 +11,7 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class AMQPConfiguration {
 
+    // Konfigurerer TopicExchange for å lytte til profilerelaterte hendelser
     @Bean
     public TopicExchange profileExchange(
             @Value("${amqp.exchange.name}") final String exchangeName
@@ -18,35 +19,13 @@ public class AMQPConfiguration {
         return new TopicExchange(exchangeName, true, false);
     }
 
-    @Bean
-    public Queue profileQueue() {
-        return new Queue("profileQueue", true);
-    }
-
-    @Bean
-    public Binding binding(TopicExchange profileExchange, Queue profileQueue,
-                           @Value("${amqp.routing.key}") String routingKey) {
-        return BindingBuilder
-                .bind(profileQueue)
-                .to(profileExchange)
-                .with(routingKey);
-    }
-
-    @Bean
-    public CachingConnectionFactory connectionFactory() {
-        CachingConnectionFactory connectionFactory = new CachingConnectionFactory();
-        connectionFactory.setHost("localhost");
-        connectionFactory.setPort(5672);
-        connectionFactory.setUsername("guest");
-        connectionFactory.setPassword("guest");
-        return connectionFactory;
-    }
-
+    // JSON-konvertering for meldinger
     @Bean
     public Jackson2JsonMessageConverter jackson2MessageConverter() {
         return new Jackson2JsonMessageConverter();
     }
 
+    // Lytter til profil-kø for profilopprettelse
     @Bean
     public SimpleRabbitListenerContainerFactory rabbitListenerContainerFactory(
             CachingConnectionFactory connectionFactory,
@@ -57,4 +36,5 @@ public class AMQPConfiguration {
         return factory;
     }
 }
+
 
