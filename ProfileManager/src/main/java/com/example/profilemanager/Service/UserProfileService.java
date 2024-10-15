@@ -9,77 +9,50 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 
 @Service
 public class UserProfileService {
 
-    private static final Logger logger = LoggerFactory.getLogger(UserProfileService.class);
-
     @Autowired
     private UserProfileRepo userProfileRepo;
 
-    @Autowired
-    private RestTemplate restTemplate;
-
-    // Create a new profile
+    // Lag en ny profil
     public UserProfile createProfile(UserProfile userProfile) {
-        // Save the new profile
-        UserProfile savedProfile = userProfileRepo.save(userProfile);
-        logger.info("Profile created: {}", savedProfile);
-
-        // Prepare the request for MatchingService
-        String matchingServiceUrl = "http://localhost:8081/api/match/register"; // Adjust URL as needed
-        Map<String, Object> requestBody = new HashMap<>();
-        requestBody.put("userId", savedProfile.getUserId());
-        requestBody.put("preferences", "some-preferences"); // Example data
-
-        // Logs before calling the MatchingService
-        logger.info("Calling MatchingService to register user for matching: userId={}, preferences={}", savedProfile.getUserId(), "some-preferences");
-
-        // Make a POST request to MatchingService
-        try {
-            restTemplate.postForObject(matchingServiceUrl, requestBody, String.class);
-            logger.info("Successfully registered user with MatchingService.");
-        } catch (Exception e) {
-            logger.error("Failed to register user with MatchingService: {}", e.getMessage());
-        }
-
-        return savedProfile;
+        return userProfileRepo.save(userProfile);
     }
 
-    // Fetch an existing profile by ID
+    // Hent en profil
     public UserProfile getProfileById(Long id) {
-        logger.info("Fetching profile with id: {}", id);
         return userProfileRepo.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
     }
 
-    // Update an existing profile
+    // Hent alle profiler
+    public List<UserProfile> getAllProfiles() {
+        return userProfileRepo.findAll();
+    }
+
+    // Oppdater en profil
     public UserProfile updateProfile(Long id, UserProfile profileDetails) {
         UserProfile userProfile = userProfileRepo.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
 
-        // Update the profile details
         userProfile.setName(profileDetails.getName());
         userProfile.setAge(profileDetails.getAge());
         userProfile.setBudget(profileDetails.getBudget());
-        userProfile.setIntrests(profileDetails.getIntrests());
+        userProfile.setInterests(profileDetails.getInterests());
         userProfile.setOccupation(profileDetails.getOccupation());
 
-        UserProfile updatedUserProfile = userProfileRepo.save(userProfile);
-        logger.info("Profile updated: {}", updatedUserProfile);
-
-        return updatedUserProfile;
+        return userProfileRepo.save(userProfile);
     }
 
-    // Delete a profile
+    // Slett en profil
     public void deleteProfile(Long id) {
         UserProfile userProfile = userProfileRepo.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
-
         userProfileRepo.delete(userProfile);
-        logger.info("Profile deleted with id: {}", id);
     }
 }

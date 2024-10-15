@@ -5,6 +5,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/profiles")
 public class ProfileController {
@@ -12,29 +14,36 @@ public class ProfileController {
     @Autowired
     private UserProfileService userProfileService;
 
-    // Create a new profile
+    // Opprett en ny profil (POST)
     @PostMapping
     public UserProfile createProfile(@RequestBody UserProfile userProfile) {
         return userProfileService.createProfile(userProfile);
     }
 
-    // Fetch an existing profile by ID
+    // Hent en eksisterende profil (GET)
     @GetMapping("/{id}")
     public UserProfile getProfile(@PathVariable Long id) {
         return userProfileService.getProfileById(id);
     }
 
-    // Update an existing profile
+    // Hent alle profiler (GET)
+    @GetMapping
+    public List<UserProfile> getAllProfiles() {
+        return userProfileService.getAllProfiles();
+    }
+
+    // Oppdater en eksisterende profil (PUT)
     @PutMapping("/{id}")
     public ResponseEntity<UserProfile> updateProfile(@PathVariable Long id, @RequestBody UserProfile profileDetails) {
         UserProfile updatedUserProfile = userProfileService.updateProfile(id, profileDetails);
         return ResponseEntity.ok(updatedUserProfile);
     }
 
-    // Delete a profile
+    // Slett en profil (DELETE)
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteProfile(@PathVariable Long id) {
         userProfileService.deleteProfile(id);
         return ResponseEntity.ok().build();
     }
 }
+

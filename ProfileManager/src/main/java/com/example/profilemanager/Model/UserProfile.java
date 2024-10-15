@@ -20,14 +20,14 @@ public class UserProfile {
     private String name;
     private int age;
     private double budget;
-    private String intrests;
+    private String interests;
     private String occupation;
 
     public UserProfile(String name, int age, double budget, String intrests, String occupation) {
         this.name = name;
         this.age = age;
         this.budget = budget;
-        this.intrests = intrests;
+        this.interests = intrests;
         this.occupation = occupation;
     }
 }

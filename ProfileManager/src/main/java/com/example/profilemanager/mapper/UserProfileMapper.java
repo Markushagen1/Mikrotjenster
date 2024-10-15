@@ -10,7 +10,7 @@ public class UserProfileMapper {
         dto.setName(userProfile.getName());
         dto.setAge(userProfile.getAge());
         dto.setBudget(userProfile.getBudget());
-        dto.setInterests(userProfile.getIntrests());
+        dto.setInterests(userProfile.getInterests());
         dto.setOccupation(userProfile.getOccupation());
         return dto;
     }

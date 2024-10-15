@@ -1,11 +1,12 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Home, Users, Building2, ArrowRight } from 'lucide-react';
 
 // LandingPage component
 export default function LandingPage() {
     const [hoveredCard, setHoveredCard] = useState<string | null>(null);
 
-    const Card = ({ icon: Icon, title, description, buttonText, type, onMouseEnter, onMouseLeave, className }: any) => {
+    const Card = ({ icon: Icon, title, description, buttonText, type, linkTo }: any) => {
         const getColors = () => {
             switch (type) {
                 case 'register':
@@ -20,26 +21,28 @@ export default function LandingPage() {
         };
 
         return (
-            <div
-                className={`relative p-8 rounded-xl shadow-lg backdrop-blur-sm bg-white/90 transition-all duration-300 ${
-                    hoveredCard === type ? 'transform -translate-y-2 shadow-xl' : ''
-                } ${className}`}
-                onMouseEnter={onMouseEnter}
-                onMouseLeave={onMouseLeave}
-            >
-                <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-purple-100 to-purple-200 rounded-bl-full opacity-20" />
-                <div className="mb-4">
-                    <Icon className="w-10 h-10 text-purple-600" />
-                </div>
-                <h3 className="text-xl font-bold mb-3 text-gray-800">{title}</h3>
-                <p className="text-gray-600 mb-6 min-h-[60px]">{description}</p>
-                <button
-                    className={`w-full py-3 px-6 rounded-lg text-white font-medium transition-all duration-300 flex items-center justify-center gap-2 ${getColors()}`}
+            <Link to={linkTo} className="block">
+                <div
+                    className={`relative p-8 rounded-xl shadow-lg backdrop-blur-sm bg-white/90 transition-all duration-300 ${
+                        hoveredCard === type ? 'transform -translate-y-2 shadow-xl' : ''
+                    }`}
+                    onMouseEnter={() => setHoveredCard(type)}
+                    onMouseLeave={() => setHoveredCard(null)}
                 >
-                    {buttonText}
-                    <ArrowRight className="w-4 h-4" />
-                </button>
-            </div>
+                    <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-purple-100 to-purple-200 rounded-bl-full opacity-20" />
+                    <div className="mb-4">
+                        <Icon className="w-10 h-10 text-purple-600" />
+                    </div>
+                    <h3 className="text-xl font-bold mb-3 text-gray-800">{title}</h3>
+                    <p className="text-gray-600 mb-6 min-h-[60px]">{description}</p>
+                    <button
+                        className={`w-full py-3 px-6 rounded-lg text-white font-medium transition-all duration-300 flex items-center justify-center gap-2 ${getColors()}`}
+                    >
+                        {buttonText}
+                        <ArrowRight className="w-4 h-4" />
+                    </button>
+                </div>
+            </Link>
         );
     };
 
@@ -51,9 +54,11 @@ export default function LandingPage() {
                     <h1 className="text-2xl font-bold text-purple-900">Kollektivet</h1>
                     <div className="space-x-6">
                         <button className="text-purple-900 hover:text-purple-700 transition-colors">Logg inn</button>
-                        <button className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg transition-colors">
-                            Registrer deg
-                        </button>
+                        <Link to="/register">
+                            <button className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg transition-colors">
+                                Registrer deg
+                            </button>
+                        </Link>
                     </div>
                 </div>
             </nav>
@@ -69,9 +74,11 @@ export default function LandingPage() {
                         En enklere vei til et fantastisk kollektivliv.
                     </p>
                     <div className="flex gap-4 justify-center">
-                        <button className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-3 rounded-lg transition-all duration-300 transform hover:-translate-y-1">
-                            Kom i gang nå
-                        </button>
+                        <Link to="/register">
+                            <button className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-3 rounded-lg transition-all duration-300 transform hover:-translate-y-1">
+                                Kom i gang nå
+                            </button>
+                        </Link>
                         <button className="bg-white text-purple-600 px-8 py-3 rounded-lg border-2 border-purple-600 hover:bg-purple-50 transition-all duration-300 transform hover:-translate-y-1">
                             Les mer
                         </button>
@@ -86,8 +93,7 @@ export default function LandingPage() {
                         title="Registrer deg"
                         description="Start din reise mot å finne det perfekte kollektivet og dine fremtidige romkamerater"
                         buttonText="Kom i gang"
-                        onMouseEnter={() => setHoveredCard('register')}
-                        onMouseLeave={() => setHoveredCard(null)}
+                        linkTo="/register"
                     />
                     <Card
                         icon={Home}
@@ -95,8 +101,7 @@ export default function LandingPage() {
                         title="Start Matching"
                         description="Vi hjelper deg å finne personer som passer perfekt med din livsstil og preferanser"
                         buttonText="Finn match"
-                        onMouseEnter={() => setHoveredCard('match')}
-                        onMouseLeave={() => setHoveredCard(null)}
+                        linkTo="/match"
                     />
                     <Card
                         icon={Building2}
@@ -104,8 +109,7 @@ export default function LandingPage() {
                         title="Registrer Bolig"
                         description="Har du en ledig bolig? Del den med vårt fellesskap av boligsøkere"
                         buttonText="List bolig"
-                        onMouseEnter={() => setHoveredCard('apartment')}
-                        onMouseLeave={() => setHoveredCard(null)}
+                        linkTo="/register"
                     />
                 </div>
 
@@ -133,4 +137,5 @@ export default function LandingPage() {
         </div>
     );
 }
+
 
