@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Heart, X } from 'lucide-react';
+import {Heart, LogOut, X} from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+
 
 interface Profile {
     userId: number;
@@ -15,6 +17,7 @@ const MatchPage: React.FC = () => {
     const [profiles, setProfiles] = useState<Profile[]>([]);
     const [currentProfileIndex, setCurrentProfileIndex] = useState(0);
     const [statusMessage, setStatusMessage] = useState<string | null>(null);
+    const navigate = useNavigate();
 
     useEffect(() => {
         const fetchProfiles = async () => {
@@ -22,7 +25,7 @@ const MatchPage: React.FC = () => {
                 const response = await axios.get('http://localhost:8080/api/profiles');
                 setProfiles(response.data);
             } catch (error) {
-                console.error('Feil ved henting av profiler', error);
+                console.error('Error fetching profiles', error);
             }
         };
         fetchProfiles();
@@ -33,22 +36,24 @@ const MatchPage: React.FC = () => {
     };
 
     const handleLike = async (likedUserId: number) => {
+        const likerId = localStorage.getItem('userId');
+        if (!likerId) {
+            alert('No user logged in');
+            return;
+        }
+
         try {
             await axios.post('http://localhost:8081/api/match/like', {
-                likerId: 1, // Hardkodet for testing; oppdater til innlogget bruker-ID
+                likerId,
                 likedUserId,
             });
-            setStatusMessage(`Du likte ${profiles[currentProfileIndex].name}!`);
+            setStatusMessage(`You liked ${profiles[currentProfileIndex].name}!`);
             goToNextProfile();
         } catch (error) {
-            if (axios.isAxiosError(error)) {
-                if (error.response && error.response.status === 409) {
-                    setStatusMessage(`Du har allerede likt ${profiles[currentProfileIndex].name}.`);
-                } else {
-                    console.error('Feil ved å like profilen:', error.message);
-                }
+            if (axios.isAxiosError(error) && error.response?.status === 409) {
+                setStatusMessage(`You have already liked ${profiles[currentProfileIndex].name}.`);
             } else {
-                console.error('En ukjent feil oppstod:', error);
+                console.error('Error liking profile:', error);
             }
         } finally {
             clearStatusMessage();
@@ -56,7 +61,7 @@ const MatchPage: React.FC = () => {
     };
 
     const handleDislike = () => {
-        setStatusMessage(`Du likte ikke ${profiles[currentProfileIndex].name}.`);
+        setStatusMessage(`You disliked ${profiles[currentProfileIndex].name}.`);
         goToNextProfile();
         clearStatusMessage();
     };
@@ -64,12 +69,18 @@ const MatchPage: React.FC = () => {
     const clearStatusMessage = () => {
         setTimeout(() => {
             setStatusMessage(null);
-        }, 2000); // Meldingen forsvinner etter 2 sekunder
+        }, 2000);
+    };
+
+    const handleLogout = () => {
+        localStorage.removeItem('userId');
+        alert('You are now logged out!');
+        navigate('/');
     };
 
     const currentProfile = profiles[currentProfileIndex];
 
-    if (!currentProfile) return <div>Laster profiler...</div>;
+    if (!currentProfile) return <div>Loading profiles...</div>;
 
     return (
         <div className="flex flex-col items-center min-h-screen bg-gradient-to-b from-purple-50 via-white to-purple-100 p-8">
@@ -77,11 +88,10 @@ const MatchPage: React.FC = () => {
                 <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-purple-100 to-purple-200 rounded-bl-full opacity-20" />
                 <div className="text-center">
                     <h2 className="text-3xl font-bold text-purple-900 mb-2">{currentProfile.name}, {currentProfile.age}</h2>
-                    <p className="text-lg text-gray-700 font-medium mb-4">Yrke: {currentProfile.occupation}</p>
-                    <p className="text-lg text-gray-700 font-medium mb-4">Interesser: {currentProfile.interests}</p>
-                    <p className="text-lg text-gray-700 font-medium mb-4">Budsjett: {currentProfile.budget} NOK</p>
+                    <p className="text-lg text-gray-700 font-medium mb-4">Occupation: {currentProfile.occupation}</p>
+                    <p className="text-lg text-gray-700 font-medium mb-4">Interests: {currentProfile.interests}</p>
+                    <p className="text-lg text-gray-700 font-medium mb-4">Budget: {currentProfile.budget} NOK</p>
                 </div>
-
                 <div className="flex justify-around mt-8">
                     <button
                         onClick={handleDislike}
@@ -98,17 +108,24 @@ const MatchPage: React.FC = () => {
                 </div>
             </div>
 
-            {/* Statusmelding */}
             {statusMessage && (
                 <div className="fixed bottom-8 bg-indigo-600 text-white py-2 px-4 rounded shadow-lg transition-opacity duration-300 ease-in-out">
                     {statusMessage}
                 </div>
             )}
+
+            <button
+                onClick={handleLogout}
+                className="mt-6 bg-gray-600 hover:bg-gray-700 text-white py-2 px-4 rounded-lg transition-all duration-300 shadow-md flex items-center gap-2"
+            >
+                <LogOut className="w-5 h-5" /> Logout
+            </button>
         </div>
     );
 };
 
 export default MatchPage;
+
 
 
 

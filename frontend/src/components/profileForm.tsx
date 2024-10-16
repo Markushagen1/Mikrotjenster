@@ -16,15 +16,14 @@ export default function ProfileForm() {
 
         try {
             const response = await axios.post('http://localhost:8080/api/profiles', profileData);
-            console.log('Profile created successfully:', response.data);
-            alert('Profile created successfully');
-            // Nullstill skjemaet
+            const userId = response.data.userId;
+            localStorage.setItem('userId', userId); // Save user ID in localStorage
+            alert('Profile created successfully and you are now logged in!');
             setName('');
             setAge('');
             setBudget('');
             setInterests('');
             setOccupation('');
-            // Send brukeren tilbake til landingssiden
             navigate('/');
         } catch (error) {
             console.error('Error creating profile', error);
@@ -120,5 +119,6 @@ export default function ProfileForm() {
         </div>
     );
 }
+
 
 
