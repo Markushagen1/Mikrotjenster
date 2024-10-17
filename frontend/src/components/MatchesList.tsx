@@ -28,7 +28,7 @@ const MatchesList: React.FC = () => {
 
             try {
                 const response = await axios.get(`http://localhost:8087/api/matches/${userId}`);
-                setMatches(response.data);
+                setMatches(response.data); // Nå får du en liste av UserProfile-objekter
             } catch (error) {
                 console.error('Feil ved henting av matcher', error);
             }
