@@ -11,7 +11,7 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class AMQPConfiguration {
 
-    // Konfigurerer TopicExchange for å lytte til profilerelaterte hendelser
+    // Konfigurerer TopicExchange for likes og matcher
     @Bean
     public TopicExchange profileExchange(
             @Value("${amqp.exchange.name}") final String exchangeName
@@ -25,7 +25,7 @@ public class AMQPConfiguration {
         return new Jackson2JsonMessageConverter();
     }
 
-    // Lytter til RabbitMQ køer for profil, like og match-hendelser
+    // Lytter til RabbitMQ køer for like og match-hendelser
     @Bean
     public SimpleRabbitListenerContainerFactory rabbitListenerContainerFactory(
             CachingConnectionFactory connectionFactory,
