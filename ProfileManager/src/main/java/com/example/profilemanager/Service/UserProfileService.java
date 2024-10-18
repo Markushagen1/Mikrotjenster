@@ -1,6 +1,7 @@
 package com.example.profilemanager.Service;
 import com.example.profilemanager.Exception.ResourceNotFoundException;
 import com.example.profilemanager.Model.UserProfile;
+import com.example.profilemanager.Model.profileEventPublisher;
 import com.example.profilemanager.Repo.UserProfileRepo;
 import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
@@ -18,11 +19,18 @@ public class UserProfileService {
     @Autowired
     private UserProfileRepo userProfileRepo;
 
+    @Autowired
+    private profileEventPublisher ProfileEventPublisher;
+
     // Lag en ny profil
     public UserProfile createProfile(UserProfile userProfile) {
         logger.info("Creating profile for user: {}", userProfile.getName());
         UserProfile savedProfile = userProfileRepo.save(userProfile);
         logger.info("Profile created successfully for user: {}", savedProfile.getName());
+
+        // Publiser hendelse til RabbitMQ
+        ProfileEventPublisher.publishProfileEvent(savedProfile);
+
         return savedProfile;
     }
 
@@ -61,6 +69,10 @@ public class UserProfileService {
 
         UserProfile updatedProfile = userProfileRepo.save(userProfile);
         logger.info("Profile updated successfully for id: {}", id);
+
+        // Publiser oppdatert hendelse til RabbitMQ
+        ProfileEventPublisher.publishProfileEvent(updatedProfile);
+
         return updatedProfile;
     }
 
@@ -77,4 +89,5 @@ public class UserProfileService {
         logger.info("Profile deleted successfully for id: {}", id);
     }
 }
+
 

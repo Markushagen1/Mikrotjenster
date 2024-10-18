@@ -6,6 +6,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -16,11 +17,8 @@ public class profileEventPublisher {
     private final String exchangeName;
     private final ObjectMapper objectMapper;
 
-    public profileEventPublisher(
-            final RabbitTemplate rabbitTemplate,
-            @Value("${amqp.exchange.name}") final String exchangeName,
-            final ObjectMapper objectMapper
-    ) {
+    @Autowired
+    public profileEventPublisher(RabbitTemplate rabbitTemplate, @Value("${amqp.exchange.name}") String exchangeName, ObjectMapper objectMapper) {
         this.rabbitTemplate = rabbitTemplate;
         this.exchangeName = exchangeName;
         this.objectMapper = objectMapper;
@@ -31,12 +29,13 @@ public class profileEventPublisher {
         try {
             String event = objectMapper.writeValueAsString(userProfileDTO);
             rabbitTemplate.convertAndSend(exchangeName, "profile.created", event);
-            log.info("Published 'profile.created' event for user: {}", userProfileDTO.getName());
+            log.info("Publiserte 'profile.created' hendelse for bruker: {}", userProfileDTO.getName());
         } catch (JsonProcessingException e) {
-            log.error("Error while serializing UserProfileDTO to JSON", e);
+            log.error("Feil under serialisering av UserProfileDTO til JSON", e);
         }
     }
 }
+
 
 
 
