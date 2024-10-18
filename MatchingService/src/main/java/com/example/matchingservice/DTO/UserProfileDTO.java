@@ -8,6 +8,9 @@ public class UserProfileDTO {
     private String interests;
     private String occupation;
 
+    public UserProfileDTO() {
+    }
+
     public Long getUserId() {
         return userId;
     }

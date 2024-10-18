@@ -25,7 +25,7 @@ public class AMQPConfiguration {
         return new Jackson2JsonMessageConverter();
     }
 
-    // Lytter til profil-kø for profilopprettelse
+    // Lytter til RabbitMQ køer for profil, like og match-hendelser
     @Bean
     public SimpleRabbitListenerContainerFactory rabbitListenerContainerFactory(
             CachingConnectionFactory connectionFactory,
@@ -36,5 +36,6 @@ public class AMQPConfiguration {
         return factory;
     }
 }
+
 
 
