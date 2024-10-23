@@ -1,4 +1,5 @@
 package com.example.profilemanager.Controller;
+import com.example.profilemanager.Jwt.JwtUtil;
 import com.example.profilemanager.Model.UserProfile;
 import com.example.profilemanager.Service.UserProfileService;
 import jakarta.validation.Valid;
@@ -18,12 +19,24 @@ public class ProfileController {
     @Autowired
     private UserProfileService userProfileService;
 
-    // Opprett en ny profil (POST)
+    @Autowired
+    private JwtUtil jwtUtil;
+
+    // Opprett en ny profil (bruker må være logget inn)
     @PostMapping
-    public ResponseEntity<UserProfile> createProfile(@Valid @RequestBody UserProfile userProfile) {
-        logger.info("Request received to create profile for: {}", userProfile.getName());
+    public ResponseEntity<UserProfile> createProfile(@Valid @RequestBody UserProfile userProfile, @RequestHeader("Authorization") String token) {
+        // Fjern "Bearer " fra starten av tokenet
+        String jwtToken = token.substring(7);
+
+        // Hent brukernavn fra JWT-token
+        String username = jwtUtil.extractUsername(jwtToken);
+
+        // Sett brukernavn på profilen
+        userProfile.setUsername(username);
+
+        // Opprett profilen
         UserProfile createdProfile = userProfileService.createProfile(userProfile);
-        logger.info("Profile created successfully for user: {}", userProfile.getName());
+
         return ResponseEntity.ok(createdProfile);
     }
 
@@ -63,6 +76,7 @@ public class ProfileController {
         return ResponseEntity.ok().build();
     }
 }
+
 
 
 

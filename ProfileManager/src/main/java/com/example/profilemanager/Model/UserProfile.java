@@ -37,13 +37,20 @@ public class UserProfile {
     @Size(max = 50)
     private String occupation;
 
-    public UserProfile(String name, int age, double budget, String intrests, String occupation) {
+    // Legger til brukernavn-feltet
+    @Size(max = 50)
+    private String username;
+
+    // Oppdaterer konstruktøren for å inkludere brukernavn
+    public UserProfile(String name, int age, double budget, String interests, String occupation, String username) {
         this.name = name;
         this.age = age;
         this.budget = budget;
-        this.interests = intrests;
+        this.interests = interests;
         this.occupation = occupation;
+        this.username = username;
     }
 }
+
 
 
