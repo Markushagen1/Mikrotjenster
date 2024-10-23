@@ -1,0 +1,39 @@
+server:
+  port: 8000
+
+spring:
+  application:
+    name: gateway
+  config:
+    import: "optional:consul:"
+  cloud:
+    gateway:
+      routes:
+        - id: profiles
+          uri: lb://ProfileManager/
+          predicates:
+            - Path=/profiles,/profiles/**
+        - id: match
+          uri: lb://MatchingService/
+          predicates:
+            - Path=/match,/match/**
+        - id: retrival
+          uri: lb://MatchRetrivalService/
+          predicates:
+          - Path=/matches,/matches/**
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowed-origins:
+              - "http://localhost:3000"
+            allowed-headers:
+              - "*"
+            allowed-methods:
+              - "GET"
+              - "POST"
+              - "OPTIONS"
+      default-filters:
+        - name: Retry
+          args:
+            retries: 3
+            methods: GET, POST
