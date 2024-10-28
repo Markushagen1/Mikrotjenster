@@ -3,6 +3,8 @@ import LandingPage from './components/LandingPage';
 import ProfileForm from './components/profileForm';
 import MatchPage from "./components/MatchPage";
 import MatchesList from "./components/MatchesList";
+import Login from "./components/Login";
+import Register from "./components/Register";
 
 function App() {
     return (
@@ -12,6 +14,8 @@ function App() {
                 <Route path="/register" element={<ProfileForm />} />
                 <Route path="/match" element={<MatchPage />} />
                 <Route path="/matches" element={<MatchesList />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/regi" element={<Register />} />
             </Routes>
         </Router>
     );
