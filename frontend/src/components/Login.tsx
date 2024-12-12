@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import {jwtDecode} from "jwt-decode";
 
 const Login: React.FC = () => {
     const [username, setUsername] = useState<string>("");
@@ -21,6 +22,23 @@ const Login: React.FC = () => {
                 const data = await response.json();
                 const token = data.token; // Assuming the token is returned as data.token
                 localStorage.setItem("token", token); // Save the token for future requests
+
+                try {
+                    // Decode the token to get the userId
+                    const decodedToken: any = jwtDecode(token);
+                    const userId = decodedToken.userId; // Assuming userId is part of the decoded token
+
+                    if (userId) {
+                        localStorage.setItem("userId", userId);
+                    } else {
+                        throw new Error("userId is missing in the token.");
+                    }
+                } catch (decodeError) {
+                    console.error("Error decoding JWT token:", decodeError);
+                    setErrorMessage("Failed to decode token. Please try again.");
+                    return;
+                }
+
                 setErrorMessage(""); // Clear error if successful
                 alert("Login successful!");
 
@@ -30,10 +48,10 @@ const Login: React.FC = () => {
                 setErrorMessage("Invalid username or password. Please try again.");
             }
         } catch (error) {
+            console.error("Login error:", error);
             setErrorMessage("An error occurred. Please try again.");
         }
     };
-
 
     // Inline-styling
     const styles = {

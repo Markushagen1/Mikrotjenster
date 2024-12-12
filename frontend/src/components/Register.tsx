@@ -34,7 +34,7 @@ const Register: React.FC = () => {
     return (
         <div style={containerStyle}>
             <form onSubmit={handleRegister} style={formStyle}>
-                <h2>Register</h2>
+                <h1>Register</h1>
                 <div style={inputContainerStyle}>
                     <label>Username</label>
                     <input

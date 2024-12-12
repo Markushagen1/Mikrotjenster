@@ -88,6 +88,11 @@ public class UserProfileService {
         userProfileRepo.delete(userProfile);
         logger.info("Profile deleted successfully for id: {}", id);
     }
+
+    public UserProfile getProfileByUsername(String username) {
+        return userProfileRepo.findByUsername(username)
+                .orElseThrow(() -> new ResourceNotFoundException("No profile found for username: " + username));
+    }
 }
 
 

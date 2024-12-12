@@ -3,7 +3,6 @@ import axios from 'axios';
 import {Heart, LogOut, X} from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
-
 interface Profile {
     userId: number;
     name: string;
@@ -36,7 +35,7 @@ const MatchPage: React.FC = () => {
     };
 
     const handleLike = async (likedUserId: number) => {
-        const likerId = localStorage.getItem('userId');
+        const likerId = localStorage.getItem("userId");
         if (!likerId) {
             alert('No user logged in');
             return;
@@ -44,7 +43,7 @@ const MatchPage: React.FC = () => {
 
         try {
             await axios.post('http://localhost:8081/api/match/like', {
-                likerId,
+                likerId: parseInt(likerId), // Konverter til tall
                 likedUserId,
             });
             setStatusMessage(`You liked ${profiles[currentProfileIndex].name}!`);
@@ -59,6 +58,8 @@ const MatchPage: React.FC = () => {
             clearStatusMessage();
         }
     };
+
+
 
     const handleDislike = () => {
         setStatusMessage(`You disliked ${profiles[currentProfileIndex].name}.`);
@@ -114,17 +115,26 @@ const MatchPage: React.FC = () => {
                 </div>
             )}
 
-            <button
-                onClick={handleLogout}
-                className="mt-6 bg-gray-600 hover:bg-gray-700 text-white py-2 px-4 rounded-lg transition-all duration-300 shadow-md flex items-center gap-2"
-            >
-                <LogOut className="w-5 h-5" /> Logout
-            </button>
+            <div className="mt-6 flex gap-4">
+                <button
+                    onClick={handleLogout}
+                    className="bg-gray-600 hover:bg-gray-700 text-white py-2 px-4 rounded-lg transition-all duration-300 shadow-md flex items-center gap-2"
+                >
+                    <LogOut className="w-5 h-5" /> Logout
+                </button>
+                <button
+                    onClick={() => navigate('/matches')}
+                    className="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg transition-all duration-300 shadow-md"
+                >
+                    View Matches
+                </button>
+            </div>
         </div>
     );
 };
 
 export default MatchPage;
+
 
 
 

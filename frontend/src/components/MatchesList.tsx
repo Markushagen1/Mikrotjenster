@@ -22,7 +22,7 @@ const MatchesList: React.FC = () => {
             const userId = localStorage.getItem('userId');
             if (!userId) {
                 alert('Ingen bruker er logget inn');
-                navigate('/');
+                navigate('/matches');
                 return;
             }
 

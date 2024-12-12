@@ -53,8 +53,10 @@ export default function LandingPage() {
                 <div className="flex justify-between items-center">
                     <h1 className="text-2xl font-bold text-purple-900">Kollektivet</h1>
                     <div className="space-x-6">
+                        <Link to="/login">
                         <button className="text-purple-900 hover:text-purple-700 transition-colors">Logg inn</button>
-                        <Link to="/register">
+                        </Link>
+                        <Link to="/regi">
                             <button className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg transition-colors">
                                 Registrer deg
                             </button>
@@ -79,9 +81,11 @@ export default function LandingPage() {
                                 Kom i gang nå
                             </button>
                         </Link>
+                        <Link to="/match">
                         <button className="bg-white text-purple-600 px-8 py-3 rounded-lg border-2 border-purple-600 hover:bg-purple-50 transition-all duration-300 transform hover:-translate-y-1">
-                            Les mer
+                            Start matching!
                         </button>
+                        </Link>
                     </div>
                 </div>
 

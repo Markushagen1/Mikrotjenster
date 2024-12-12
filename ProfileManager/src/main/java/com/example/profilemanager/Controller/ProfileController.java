@@ -4,6 +4,7 @@ import com.example.profilemanager.Model.UserProfile;
 import com.example.profilemanager.Service.UserProfileService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
@@ -39,6 +40,27 @@ public class ProfileController {
 
         return ResponseEntity.ok(createdProfile);
     }
+
+    // Hent profilen til den innloggede brukeren
+    @GetMapping("/me")
+    public ResponseEntity<UserProfile> getLoggedInUserProfile(@RequestHeader("Authorization") String token) {
+        // Fjern "Bearer " fra starten av tokenet
+        String jwtToken = token.substring(7);
+
+        // Hent brukernavn fra JWT-token
+        String username = jwtUtil.extractUsername(jwtToken);
+
+        // Hent profilen basert på brukernavn
+        UserProfile userProfile = userProfileService.getProfileByUsername(username);
+
+        if (userProfile == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+        }
+
+        return ResponseEntity.ok(userProfile);
+    }
+
+
 
     // Hent en eksisterende profil (GET)
     @GetMapping("/{id}")

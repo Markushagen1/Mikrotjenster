@@ -1,7 +1,6 @@
 import { useState } from 'react';
-import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-
+import apiClient from "../apiClient";
 export default function ProfileForm() {
     const [name, setName] = useState('');
     const [age, setAge] = useState('');
@@ -15,9 +14,9 @@ export default function ProfileForm() {
         const profileData = { name, age, budget, interests, occupation };
 
         try {
-            const response = await axios.post('http://localhost:8080/api/profiles', profileData);
+            const response = await apiClient.post('/profiles', profileData);
             const userId = response.data.userId;
-            localStorage.setItem('userId', userId); // Save user ID in localStorage
+            localStorage.setItem('userId', userId); // Lagre bruker-ID
             alert('Profile created successfully and you are now logged in!');
             setName('');
             setAge('');
@@ -30,6 +29,7 @@ export default function ProfileForm() {
             alert('Failed to create profile');
         }
     };
+
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-purple-50 to-purple-100">

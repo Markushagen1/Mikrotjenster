@@ -4,6 +4,7 @@ import com.example.matchingservice.Service.MatchingService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
@@ -35,15 +36,33 @@ public class MatchingController {
     }
 
     @PostMapping("/like")
-    public ResponseEntity<String> likeProfile(@RequestBody Map<String, Object> requestBody) {
-        Long likerId = Long.valueOf(requestBody.get("likerId").toString());
-        Long likedUserId = Long.valueOf(requestBody.get("likedUserId").toString());
+    public ResponseEntity<?> likeProfile(@RequestBody Map<String, Object> likeRequest) {
+        // Hent likerId og likedUserId fra request-body
+        Object likerIdObj = likeRequest.get("likerId");
+        Object likedUserIdObj = likeRequest.get("likedUserId");
 
-        logger.info("Received request to like profile: likerId={}, likedUserId={}", likerId, likedUserId);
+        // Valider at begge verdiene finnes og er gyldige
+        if (likerIdObj == null || likedUserIdObj == null) {
+            logger.error("Invalid request: likerId or likedUserId is null");
+            return ResponseEntity.badRequest().body("likerId and likedUserId are required");
+        }
 
-        // Call service method to like the profile
-        return matchingService.likeProfile(likerId, likedUserId);
+        try {
+            Long likerId = Long.valueOf(likerIdObj.toString());
+            Long likedUserId = Long.valueOf(likedUserIdObj.toString());
+
+            // Kall service for å håndtere matching-logikken
+            matchingService.likeProfile(likerId, likedUserId);
+            return ResponseEntity.ok("Like registered successfully");
+        } catch (NumberFormatException e) {
+            logger.error("Invalid request: likerId or likedUserId is not a valid number", e);
+            return ResponseEntity.badRequest().body("likerId and likedUserId must be valid numbers");
+        } catch (Exception e) {
+            logger.error("Error processing like request", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred while processing the request");
+        }
     }
+
 
     // Corrected endpoint to get matches for a user
     @GetMapping("/matches/{userId}")
