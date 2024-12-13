@@ -1,7 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import {Heart, LogOut, X} from 'lucide-react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 
 interface Profile {
     userId: number;
@@ -30,10 +29,6 @@ const MatchPage: React.FC = () => {
         fetchProfiles();
     }, []);
 
-    const goToNextProfile = () => {
-        setCurrentProfileIndex((prevIndex) => (prevIndex + 1) % profiles.length);
-    };
-
     const handleLike = async (likedUserId: number) => {
         const likerId = localStorage.getItem("userId");
         if (!likerId) {
@@ -43,100 +38,74 @@ const MatchPage: React.FC = () => {
 
         try {
             await axios.post('http://localhost:8081/api/match/like', {
-                likerId: parseInt(likerId), // Konverter til tall
+                likerId: parseInt(likerId, 10),
                 likedUserId,
             });
             setStatusMessage(`You liked ${profiles[currentProfileIndex].name}!`);
             goToNextProfile();
         } catch (error) {
-            if (axios.isAxiosError(error) && error.response?.status === 409) {
-                setStatusMessage(`You have already liked ${profiles[currentProfileIndex].name}.`);
-            } else {
-                console.error('Error liking profile:', error);
-            }
+            console.error('Error liking profile:', error);
         } finally {
-            clearStatusMessage();
+            setTimeout(() => setStatusMessage(null), 2000);
         }
     };
 
-
-
-    const handleDislike = () => {
-        setStatusMessage(`You disliked ${profiles[currentProfileIndex].name}.`);
-        goToNextProfile();
-        clearStatusMessage();
-    };
-
-    const clearStatusMessage = () => {
-        setTimeout(() => {
-            setStatusMessage(null);
-        }, 2000);
-    };
-
-    const handleLogout = () => {
-        localStorage.removeItem('userId');
-        alert('You are now logged out!');
-        navigate('/');
+    const goToNextProfile = () => {
+        setCurrentProfileIndex((prevIndex) => (prevIndex + 1) % profiles.length);
     };
 
     const currentProfile = profiles[currentProfileIndex];
 
-    if (!currentProfile) return <div>Loading profiles...</div>;
-
     return (
         <div className="flex flex-col items-center min-h-screen bg-gradient-to-b from-purple-50 via-white to-purple-100 p-8">
-            <div className="relative max-w-lg w-full bg-white shadow-lg rounded-lg overflow-hidden p-8">
-                <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-purple-100 to-purple-200 rounded-bl-full opacity-20" />
-                <div className="text-center">
-                    <h2 className="text-3xl font-bold text-purple-900 mb-2">{currentProfile.name}, {currentProfile.age}</h2>
-                    <p className="text-lg text-gray-700 font-medium mb-4">Occupation: {currentProfile.occupation}</p>
-                    <p className="text-lg text-gray-700 font-medium mb-4">Interests: {currentProfile.interests}</p>
-                    <p className="text-lg text-gray-700 font-medium mb-4">Budget: {currentProfile.budget} NOK</p>
+            {currentProfile ? (
+                <div className="bg-white shadow-lg rounded-lg p-8">
+                    <h3 className="text-2xl font-bold text-purple-900">{currentProfile.name}</h3>
+                    <p className="text-gray-700">{currentProfile.age} år</p>
+                    <p className="text-gray-700">Interesser: {currentProfile.interests}</p>
                 </div>
-                <div className="flex justify-around mt-8">
-                    <button
-                        onClick={handleDislike}
-                        className="bg-red-500 text-white p-4 rounded-full shadow-lg transform hover:scale-110 transition-transform duration-200"
-                    >
-                        <X className="w-8 h-8" />
-                    </button>
-                    <button
-                        onClick={() => handleLike(currentProfile.userId)}
-                        className="bg-green-500 text-white p-4 rounded-full shadow-lg transform hover:scale-110 transition-transform duration-200"
-                    >
-                        <Heart className="w-8 h-8" />
-                    </button>
-                </div>
-            </div>
-
-            {statusMessage && (
-                <div className="fixed bottom-8 bg-indigo-600 text-white py-2 px-4 rounded shadow-lg transition-opacity duration-300 ease-in-out">
-                    {statusMessage}
-                </div>
+            ) : (
+                <p>Loading profiles...</p>
             )}
-
-            <div className="mt-6 flex gap-4">
+            <div className="mt-4 flex space-x-4">
                 <button
-                    onClick={handleLogout}
-                    className="bg-gray-600 hover:bg-gray-700 text-white py-2 px-4 rounded-lg transition-all duration-300 shadow-md flex items-center gap-2"
+                    onClick={() => handleLike(currentProfile?.userId!)}
+                    className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-all"
                 >
-                    <LogOut className="w-5 h-5" /> Logout
+                    Like
                 </button>
                 <button
+                    onClick={goToNextProfile}
+                    className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition-all"
+                >
+                    Dislike
+                </button>
+            </div>
+            <div className="mt-6 flex gap-4">
+                <button
                     onClick={() => navigate('/matches')}
-                    className="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg transition-all duration-300 shadow-md"
+                    className="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-lg transition-all"
                 >
                     View Matches
                 </button>
+                <button
+                    onClick={() => {
+                        localStorage.removeItem('userId');
+                        alert('Logged out');
+                        navigate('/');
+                    }}
+                    className="bg-gray-600 hover:bg-gray-700 text-white py-2 px-4 rounded-lg"
+                >
+                    Log Out
+                </button>
             </div>
+            {statusMessage && (
+                <p className="fixed bottom-4 text-white bg-purple-600 px-4 py-2 rounded-lg shadow-md">
+                    {statusMessage}
+                </p>
+            )}
         </div>
     );
 };
 
 export default MatchPage;
-
-
-
-
-
-

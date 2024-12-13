@@ -40,67 +40,62 @@ public class MatchingService {
         this.rabbitTemplate = rabbitTemplate;
     }
 
-    // Registrerer bruker for matching (logikk kan tilpasses videre)
     public void registerUserForMatching(Long userId, String preferences) {
-        logger.info("Registering user for matching in service layer: userId={}, preferences={}", userId, preferences);
-        // Implement the registration logic here if necessary
-        logger.info("User successfully registered in service layer: userId={}", userId);
+        logger.info("Registering user for matching: userId={}, preferences={}", userId, preferences);
+        // Implementation for future use
     }
 
-    public ResponseEntity<String> likeProfile(Long likerId, Long likedUserId) {
-        // Sjekk om like allerede eksisterer
-        Optional<Like> existingLike = likeRepo.findByLikerIdAndLikedUserId(likerId, likedUserId);
-        if (existingLike.isPresent()) {
-            logger.info("Like already exists: likerId={}, likedUserId={}", likerId, likedUserId);
-            return ResponseEntity.status(HttpStatus.CONFLICT).body("Like already exists.");
+    public String likeProfile(Long likerId, Long likedUserId) {
+        // Sjekk at brukeren ikke prøver å like seg selv
+        if (likerId.equals(likedUserId)) {
+            throw new IllegalArgumentException("A user cannot like themselves.");
         }
 
-        // Lagre like i databasen
+        // Sjekk om like allerede eksisterer
+        if (likeRepo.findByLikerIdAndLikedUserId(likerId, likedUserId).isPresent()) {
+            throw new IllegalArgumentException("Like already exists.");
+        }
+
         likeRepo.save(new Like(likerId, likedUserId));
         logger.info("New like registered: likerId={}, likedUserId={}", likerId, likedUserId);
 
-        // Publisere en melding til likeQueue
-        likeDTO likeEvent = new likeDTO(likerId, likedUserId);
-        rabbitTemplate.convertAndSend(exchangeName, likeRoutingKey, likeEvent);
-        logger.info("Published 'profile.liked' event: likerId={}, likedUserId={}", likerId, likedUserId);
+        try {
+            rabbitTemplate.convertAndSend(exchangeName, likeRoutingKey, new likeDTO(likerId, likedUserId));
+            logger.info("Published 'profile.liked' event: likerId={}, likedUserId={}", likerId, likedUserId);
+        } catch (Exception e) {
+            logger.error("Failed to publish RabbitMQ message for like", e);
+        }
 
-
-        // Sjekk etter gjensidig like (match)
-        Optional<Like> reciprocalLike = likeRepo.findByLikerIdAndLikedUserId(likedUserId, likerId);
-        if (reciprocalLike.isPresent()) {
+        if (likeRepo.findByLikerIdAndLikedUserId(likedUserId, likerId).isPresent()) {
             matchRepo.save(new Match(likerId, likedUserId));
             logger.info("It's a match! likerId={}, likedUserId={}", likerId, likedUserId);
 
-            // Publisere en melding til matchQueue med LikeEventDTO
-            rabbitTemplate.convertAndSend(exchangeName, matchRoutingKey, likeEvent);
-            logger.info("Published 'profile.matched' event: likerId={}, likedUserId={}", likerId, likedUserId);
+            try {
+                rabbitTemplate.convertAndSend(exchangeName, matchRoutingKey, new likeDTO(likerId, likedUserId));
+                logger.info("Published 'profile.matched' event: likerId={}, likedUserId={}", likerId, likedUserId);
+            } catch (Exception e) {
+                logger.error("Failed to publish RabbitMQ message for match", e);
+            }
 
-            return ResponseEntity.ok("It's a match!");
+            return "It's a match!";
         }
 
-        return ResponseEntity.ok("Like is registered.");
+        return "Like is registered.";
     }
 
 
-    // Henter alle matches for en bruker
     public List<Long> getMatches(Long userId) {
         List<Match> matches = matchRepo.findByUserId1OrUserId2(userId, userId);
-        List<Long> matchedUserIds = new ArrayList<>();
-
-        // Går gjennom alle matches og finner tilknyttede bruker-IDer
-        for (Match match : matches) {
-            if (userId.equals(match.getUserId1())) {
-                matchedUserIds.add(match.getUserId2());
-            } else if (userId.equals(match.getUserId2())) {
-                matchedUserIds.add(match.getUserId1());
-            }
-        }
+        List<Long> matchedUserIds = matches.stream()
+                .map(match -> userId.equals(match.getUserId1()) ? match.getUserId2() : match.getUserId1())
+                .distinct()
+                .toList();
 
         logger.info("Matches retrieved for userId {}: {}", userId, matchedUserIds);
         return matchedUserIds;
     }
-}
 
+}
 
 
 

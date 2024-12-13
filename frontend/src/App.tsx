@@ -5,6 +5,7 @@ import MatchPage from "./components/MatchPage";
 import MatchesList from "./components/MatchesList";
 import Login from "./components/Login";
 import Register from "./components/Register";
+import ChatPage from "./components/ChatPage";
 
 function App() {
     return (
@@ -16,6 +17,7 @@ function App() {
                 <Route path="/matches" element={<MatchesList />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/regi" element={<Register />} />
+                <Route path="/chat/:matchId" element={<ChatPage />} />
             </Routes>
         </Router>
     );

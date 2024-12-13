@@ -14,7 +14,6 @@ import java.util.Map;
 @RequestMapping("/api/match")
 public class MatchingController {
 
-
     private static final Logger logger = LoggerFactory.getLogger(MatchingController.class);
 
     @Autowired
@@ -27,52 +26,37 @@ public class MatchingController {
 
         logger.info("Received request to register user for matching: userId={}, preferences={}", userId, preferences);
 
-        // Register the user for matching
         matchingService.registerUserForMatching(userId, preferences);
-
-        logger.info("User registered for matching: userId={}", userId);
 
         return ResponseEntity.ok("User registered for matching!");
     }
 
     @PostMapping("/like")
-    public ResponseEntity<?> likeProfile(@RequestBody Map<String, Object> likeRequest) {
-        // Hent likerId og likedUserId fra request-body
-        Object likerIdObj = likeRequest.get("likerId");
-        Object likedUserIdObj = likeRequest.get("likedUserId");
-
-        // Valider at begge verdiene finnes og er gyldige
-        if (likerIdObj == null || likedUserIdObj == null) {
-            logger.error("Invalid request: likerId or likedUserId is null");
-            return ResponseEntity.badRequest().body("likerId and likedUserId are required");
-        }
+    public ResponseEntity<String> likeProfile(@RequestBody Map<String, Object> likeRequest) {
+        Long likerId = Long.valueOf(likeRequest.get("likerId").toString());
+        Long likedUserId = Long.valueOf(likeRequest.get("likedUserId").toString());
 
         try {
-            Long likerId = Long.valueOf(likerIdObj.toString());
-            Long likedUserId = Long.valueOf(likedUserIdObj.toString());
-
-            // Kall service for å håndtere matching-logikken
-            matchingService.likeProfile(likerId, likedUserId);
-            return ResponseEntity.ok("Like registered successfully");
-        } catch (NumberFormatException e) {
-            logger.error("Invalid request: likerId or likedUserId is not a valid number", e);
-            return ResponseEntity.badRequest().body("likerId and likedUserId must be valid numbers");
+            String result = matchingService.likeProfile(likerId, likedUserId);
+            return ResponseEntity.ok(result);
+        } catch (IllegalArgumentException e) {
+            logger.error("Invalid like request: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
         } catch (Exception e) {
             logger.error("Error processing like request", e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred while processing the request");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred while processing the request.");
         }
     }
 
-
-    // Corrected endpoint to get matches for a user
     @GetMapping("/matches/{userId}")
-    public ResponseEntity<List<Long>> getMatches(@PathVariable Long userId) {
-        logger.info("Received request to get matches for userId={}", userId);
-
-        // Call service method to get matches
+    public ResponseEntity<?> getMatches(@PathVariable Long userId) {
         List<Long> matchedUserIds = matchingService.getMatches(userId);
 
-        logger.info("Matches for userId {}: {}", userId, matchedUserIds);
+        if (matchedUserIds.isEmpty()) {
+            return ResponseEntity.ok("No matches found.");
+        }
+
         return ResponseEntity.ok(matchedUserIds);
     }
 }
+

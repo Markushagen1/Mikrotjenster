@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState } from 'react';
 import {jwtDecode} from "jwt-decode";
 
 const Login: React.FC = () => {
@@ -20,30 +20,20 @@ const Login: React.FC = () => {
 
             if (response.ok) {
                 const data = await response.json();
-                const token = data.token; // Assuming the token is returned as data.token
-                localStorage.setItem("token", token); // Save the token for future requests
+                const token = data.token;
+                localStorage.setItem("token", token);
 
-                try {
-                    // Decode the token to get the userId
-                    const decodedToken: any = jwtDecode(token);
-                    const userId = decodedToken.userId; // Assuming userId is part of the decoded token
+                const decodedToken: any = jwtDecode(token);
+                const userId = decodedToken?.userId;
 
-                    if (userId) {
-                        localStorage.setItem("userId", userId);
-                    } else {
-                        throw new Error("userId is missing in the token.");
-                    }
-                } catch (decodeError) {
-                    console.error("Error decoding JWT token:", decodeError);
-                    setErrorMessage("Failed to decode token. Please try again.");
-                    return;
+                if (!userId) {
+                    throw new Error("userId is missing in the token.");
                 }
 
-                setErrorMessage(""); // Clear error if successful
+                localStorage.setItem("userId", userId.toString());
+                setErrorMessage("");
                 alert("Login successful!");
-
-                // Redirect to profile page or another page in the app
-                window.location.href = "/"; // Adjust the route based on your app's flow
+                window.location.href = "/";
             } else {
                 setErrorMessage("Invalid username or password. Please try again.");
             }
@@ -53,89 +43,40 @@ const Login: React.FC = () => {
         }
     };
 
-    // Inline-styling
-    const styles = {
-        container: {
-            maxWidth: "400px",
-            margin: "0 auto",
-            padding: "20px",
-            backgroundColor: "#f5f5f5",
-            borderRadius: "8px",
-            boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)",
-        },
-        header: {
-            textAlign: "center" as "center",
-            marginBottom: "20px",
-        },
-        formGroup: {
-            marginBottom: "15px",
-        },
-        label: {
-            display: "block",
-            marginBottom: "5px",
-            fontWeight: "bold" as "bold",
-        },
-        input: {
-            width: "100%",
-            padding: "10px",
-            border: "1px solid #ccc",
-            borderRadius: "4px",
-            boxSizing: "border-box" as "border-box",
-        },
-        errorMessage: {
-            color: "red",
-            textAlign: "center" as "center",
-            marginTop: "10px",
-        },
-        button: {
-            width: "100%",
-            padding: "10px",
-            backgroundColor: "#4CAF50",
-            color: "white",
-            border: "none",
-            borderRadius: "4px",
-            cursor: "pointer",
-        },
-        buttonHover: {
-            backgroundColor: "#45a049",
-        },
-    };
-
     return (
-        <div style={styles.container}>
-            <h2 style={styles.header}>Login</h2>
-            <form onSubmit={handleSubmit}>
-                <div style={styles.formGroup}>
-                    <label htmlFor="username" style={styles.label}>
-                        Username
+        <div className="flex flex-col items-center min-h-screen bg-gradient-to-b from-purple-50 via-white to-purple-100 p-8">
+            <div className="max-w-md w-full bg-white shadow-md rounded-lg p-8">
+                <h2 className="text-2xl font-bold mb-6 text-purple-900">Login</h2>
+                <form onSubmit={handleSubmit}>
+                    <label className="block mb-4">
+                        <span className="text-gray-700">Username</span>
+                        <input
+                            type="text"
+                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500"
+                            value={username}
+                            onChange={(e) => setUsername(e.target.value)}
+                            required
+                        />
                     </label>
-                    <input
-                        type="text"
-                        id="username"
-                        value={username}
-                        onChange={(e) => setUsername(e.target.value)}
-                        required
-                        style={styles.input}
-                    />
-                </div>
-                <div style={styles.formGroup}>
-                    <label htmlFor="password" style={styles.label}>
-                        Password
+                    <label className="block mb-4">
+                        <span className="text-gray-700">Password</span>
+                        <input
+                            type="password"
+                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            required
+                        />
                     </label>
-                    <input
-                        type="password"
-                        id="password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        required
-                        style={styles.input}
-                    />
-                </div>
-                {errorMessage && <p style={styles.errorMessage}>{errorMessage}</p>}
-                <button type="submit" style={styles.button}>
-                    Log In
-                </button>
-            </form>
+                    {errorMessage && <p className="text-red-500">{errorMessage}</p>}
+                    <button
+                        type="submit"
+                        className="w-full py-2 px-4 mt-4 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-all"
+                    >
+                        Log In
+                    </button>
+                </form>
+            </div>
         </div>
     );
 };
