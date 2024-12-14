@@ -9,7 +9,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("api/profiles")
@@ -22,8 +24,15 @@ public class TestWithRetrivalController {
     }
 
     @PostMapping("/by-ids")
-    public ResponseEntity<List<UserProfile>> getProfilesByIds(@RequestBody List<Long> userIds) {
+    public ResponseEntity<List<UserProfile>> getProfilesByIds(@RequestBody Map<String, List<Long>> requestBody) {
+        List<Long> userIds = requestBody.get("userIds");
+
+        if (userIds == null || userIds.isEmpty()) {
+            return ResponseEntity.badRequest().body(Collections.emptyList());
+        }
+
         List<UserProfile> profiles = userProfileRepo.findByUserIdIn(userIds);
         return ResponseEntity.ok(profiles);
     }
+
 }

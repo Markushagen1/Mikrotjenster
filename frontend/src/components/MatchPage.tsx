@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
 
 interface Profile {
     userId: number;
@@ -20,36 +20,42 @@ const MatchPage: React.FC = () => {
     useEffect(() => {
         const fetchProfiles = async () => {
             try {
-                const response = await axios.get('http://localhost:8080/api/profiles');
+                const response = await axios.get("http://localhost:8080/api/profiles", {
+                    headers: {
+                        Authorization: `Bearer ${localStorage.getItem("token")}`,
+                    },
+                });
                 setProfiles(response.data);
             } catch (error) {
-                console.error('Error fetching profiles', error);
+                console.error("Error fetching profiles", error);
             }
         };
         fetchProfiles();
     }, []);
 
     const handleLike = async (likedUserId: number) => {
-        const likerId = localStorage.getItem("userId");
-        if (!likerId) {
-            alert('No user logged in');
-            return;
-        }
-
         try {
-            await axios.post('http://localhost:8081/api/match/like', {
-                likerId: parseInt(likerId, 10),
-                likedUserId,
-            });
+            await axios.post(
+                'http://localhost:8081/api/match/like',
+                { likedUserId }, // Kun likedUserId
+                {
+                    headers: {
+                        Authorization: `Bearer ${localStorage.getItem("token")}`,
+                    },
+                }
+            );
             setStatusMessage(`You liked ${profiles[currentProfileIndex].name}!`);
             goToNextProfile();
-        } catch (error) {
-            console.error('Error liking profile:', error);
+        } catch (error: any) {
+            if (error.response?.status === 409) {
+                setStatusMessage("You cannot like yourself!");
+            } else {
+                setStatusMessage("An error occurred.");
+            }
         } finally {
             setTimeout(() => setStatusMessage(null), 2000);
         }
     };
-
     const goToNextProfile = () => {
         setCurrentProfileIndex((prevIndex) => (prevIndex + 1) % profiles.length);
     };
@@ -61,15 +67,15 @@ const MatchPage: React.FC = () => {
             {currentProfile ? (
                 <div className="bg-white shadow-lg rounded-lg p-8">
                     <h3 className="text-2xl font-bold text-purple-900">{currentProfile.name}</h3>
-                    <p className="text-gray-700">{currentProfile.age} år</p>
-                    <p className="text-gray-700">Interesser: {currentProfile.interests}</p>
+                    <p className="text-gray-700">{currentProfile.age} years old</p>
+                    <p className="text-gray-700">Interests: {currentProfile.interests}</p>
                 </div>
             ) : (
                 <p>Loading profiles...</p>
             )}
             <div className="mt-4 flex space-x-4">
                 <button
-                    onClick={() => handleLike(currentProfile?.userId!)}
+                    onClick={() => handleLike(currentProfile.userId)}
                     className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-all"
                 >
                     Like
@@ -83,16 +89,17 @@ const MatchPage: React.FC = () => {
             </div>
             <div className="mt-6 flex gap-4">
                 <button
-                    onClick={() => navigate('/matches')}
+                    onClick={() => navigate("/matches")}
                     className="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-lg transition-all"
                 >
                     View Matches
                 </button>
                 <button
                     onClick={() => {
-                        localStorage.removeItem('userId');
-                        alert('Logged out');
-                        navigate('/');
+                        localStorage.removeItem("userId");
+                        localStorage.removeItem("token");
+                        alert("Logged out");
+                        navigate("/login");
                     }}
                     className="bg-gray-600 hover:bg-gray-700 text-white py-2 px-4 rounded-lg"
                 >

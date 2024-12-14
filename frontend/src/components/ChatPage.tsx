@@ -16,7 +16,7 @@ const ChatPage: React.FC = () => {
     const [newMessage, setNewMessage] = useState<string>("");
     const [socket, setSocket] = useState<WebSocket | null>(null);
 
-    // Fetch messages from the backend when the component mounts
+    // Fetch messages from the backend
     useEffect(() => {
         if (!matchId) {
             console.error("No matchId provided");
@@ -44,6 +44,11 @@ const ChatPage: React.FC = () => {
 
     // WebSocket connection setup
     useEffect(() => {
+        if (!matchId) {
+            console.error("No matchId provided");
+            return;
+        }
+
         const ws = new WebSocket("ws://localhost:8084/ws/messages");
 
         ws.onopen = () => {
@@ -72,17 +77,12 @@ const ChatPage: React.FC = () => {
         return () => {
             ws.close();
         };
-    }, []);
+    }, [matchId]);
 
     // Send a message via WebSocket
     const sendMessage = () => {
-        if (!socket) {
-            console.error("WebSocket connection not established");
-            return;
-        }
-
-        if (!newMessage.trim()) {
-            console.error("Message is empty");
+        if (socket?.readyState !== WebSocket.OPEN) {
+            console.error("WebSocket is not open. Cannot send message.");
             return;
         }
 
@@ -101,16 +101,11 @@ const ChatPage: React.FC = () => {
 
         try {
             socket.send(JSON.stringify(message));
-            setMessages((prevMessages) => [...prevMessages, message]);
             setNewMessage("");
         } catch (error) {
-            console.error("Error sending message:", error);
+            console.error("Failed to send message:", error);
         }
     };
-
-    if (!matchId) {
-        return <div>Error: Match ID is not defined. Please try again.</div>;
-    }
 
     return (
         <div className="flex flex-col items-center min-h-screen bg-gradient-to-b from-blue-50 via-white to-blue-100 p-6">

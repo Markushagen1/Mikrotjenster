@@ -4,13 +4,12 @@ import com.example.matchingservice.Model.Like;
 import com.example.matchingservice.Model.Match;
 import com.example.matchingservice.Repo.LikeRepo;
 import com.example.matchingservice.Repo.MatchRepo;
+import com.example.matchingservice.jwt.JwtUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -40,42 +39,44 @@ public class MatchingService {
         this.rabbitTemplate = rabbitTemplate;
     }
 
+    @Autowired
+    private JwtUtil jwtUtil;
+
     public void registerUserForMatching(Long userId, String preferences) {
         logger.info("Registering user for matching: userId={}, preferences={}", userId, preferences);
-        // Implementation for future use
+        // Placeholder for actual implementation
     }
 
     public String likeProfile(Long likerId, Long likedUserId) {
-        // Sjekk at brukeren ikke prøver å like seg selv
+        logger.info("Processing like: likerId={}, likedUserId={}", likerId, likedUserId);
+
+        // Sjekk at brukeren ikke liker seg selv
         if (likerId.equals(likedUserId)) {
+            logger.error("User cannot like themselves: likerId={}, likedUserId={}", likerId, likedUserId);
             throw new IllegalArgumentException("A user cannot like themselves.");
         }
 
         // Sjekk om like allerede eksisterer
         if (likeRepo.findByLikerIdAndLikedUserId(likerId, likedUserId).isPresent()) {
+            logger.error("Like already exists: likerId={}, likedUserId={}", likerId, likedUserId);
             throw new IllegalArgumentException("Like already exists.");
         }
 
+        // Lagre "like" i databasen
         likeRepo.save(new Like(likerId, likedUserId));
         logger.info("New like registered: likerId={}, likedUserId={}", likerId, likedUserId);
 
-        try {
-            rabbitTemplate.convertAndSend(exchangeName, likeRoutingKey, new likeDTO(likerId, likedUserId));
-            logger.info("Published 'profile.liked' event: likerId={}, likedUserId={}", likerId, likedUserId);
-        } catch (Exception e) {
-            logger.error("Failed to publish RabbitMQ message for like", e);
-        }
+        // Publiser RabbitMQ-event for "like"
+        rabbitTemplate.convertAndSend(exchangeName, likeRoutingKey, new likeDTO(likerId, likedUserId));
 
+        // Sjekk for gjensidig like
         if (likeRepo.findByLikerIdAndLikedUserId(likedUserId, likerId).isPresent()) {
+            // Lagre match
             matchRepo.save(new Match(likerId, likedUserId));
             logger.info("It's a match! likerId={}, likedUserId={}", likerId, likedUserId);
 
-            try {
-                rabbitTemplate.convertAndSend(exchangeName, matchRoutingKey, new likeDTO(likerId, likedUserId));
-                logger.info("Published 'profile.matched' event: likerId={}, likedUserId={}", likerId, likedUserId);
-            } catch (Exception e) {
-                logger.error("Failed to publish RabbitMQ message for match", e);
-            }
+            // Publiser RabbitMQ-event for "match"
+            rabbitTemplate.convertAndSend(exchangeName, matchRoutingKey, new likeDTO(likerId, likedUserId));
 
             return "It's a match!";
         }
@@ -85,9 +86,13 @@ public class MatchingService {
 
 
     public List<Long> getMatches(Long userId) {
+        // Hent matcher der brukeren er involvert som userId1 eller userId2
         List<Match> matches = matchRepo.findByUserId1OrUserId2(userId, userId);
+
+        // Filtrer ut brukerens egen ID fra listen over matchedUserIds
         List<Long> matchedUserIds = matches.stream()
                 .map(match -> userId.equals(match.getUserId1()) ? match.getUserId2() : match.getUserId1())
+                .filter(matchedUserId -> !matchedUserId.equals(userId)) // Fjern brukeren selv
                 .distinct()
                 .toList();
 
@@ -95,7 +100,13 @@ public class MatchingService {
         return matchedUserIds;
     }
 
+
+    public Long extractUserIdFromToken(String token) {
+        return jwtUtil.extractUserId(token);
+    }
 }
+
+
 
 
 

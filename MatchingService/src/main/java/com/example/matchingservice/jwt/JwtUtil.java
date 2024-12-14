@@ -1,5 +1,4 @@
-package com.example.profilemanager.Jwt;
-
+package com.example.matchingservice.jwt;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
@@ -53,6 +52,3 @@ public class JwtUtil {
         return (username.equals(extractUsername(token)) && !isTokenExpired(token));
     }
 }
-
-
-

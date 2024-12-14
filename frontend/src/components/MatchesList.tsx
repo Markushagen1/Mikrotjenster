@@ -7,8 +7,6 @@ interface Profile {
     name: string;
     age: number;
     interests: string;
-    budget: number;
-    occupation: string;
 }
 
 const MatchesList: React.FC = () => {
@@ -17,7 +15,7 @@ const MatchesList: React.FC = () => {
 
     useEffect(() => {
         const fetchMatches = async () => {
-            const userId = localStorage.getItem('userId');
+            const userId = parseInt(localStorage.getItem('userId') || '0');
             if (!userId) {
                 alert('Ingen bruker er logget inn');
                 navigate('/');
@@ -25,12 +23,36 @@ const MatchesList: React.FC = () => {
             }
 
             try {
+                // Forespørsel for å hente matchedUserIds
                 const response = await axios.get(`http://localhost:8087/api/matches/${userId}`);
-                setMatches(response.data);
-            } catch (error) {
-                console.error('Feil ved henting av matcher', error);
+                const matchedUserIds: number[] = response.data;
+
+                console.log("Matched user IDs:", matchedUserIds);
+
+                // Hvis det ikke finnes matcher, stopp her
+                if (!matchedUserIds || matchedUserIds.length === 0) {
+                    console.warn("Ingen matcher funnet.");
+                    setMatches([]); // Sett matcher til tom liste
+                    return;
+                }
+
+                // Send matchedUserIds pakket i et objekt (backend forventer dette)
+                const profilesResponse = await axios.post(
+                    'http://localhost:8080/api/profiles/by-ids',
+                    { userIds: matchedUserIds }, // Send som nøkkelen "userIds"
+                    { headers: { 'Content-Type': 'application/json' } }
+                );
+
+                // Filtrer ut brukeren selv fra listen
+                const filteredMatches = profilesResponse.data.filter((profile: Profile) => profile.userId !== userId);
+
+                setMatches(filteredMatches);
+            } catch (error: any) {
+                console.error('Feil ved henting av matcher', error.response || error.message);
+                alert("Kunne ikke hente matcher. Vennligst prøv igjen senere.");
             }
         };
+
         fetchMatches();
     }, [navigate]);
 
@@ -59,3 +81,5 @@ const MatchesList: React.FC = () => {
 };
 
 export default MatchesList;
+
+
