@@ -14,8 +14,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
+
 @Service
 public class MatchRetrivalService {
     private final MatchRepo matchRepo;
@@ -28,7 +28,10 @@ public class MatchRetrivalService {
     }
 
     public List<UserProfile> getMatchesForUser(Long userId) {
+        // Hent matcher fra databasen
         List<Match> matches = matchRepo.findByUserId1OrUserId2(userId, userId);
+
+        // Ekstraher matchede bruker-ID-er
         List<Long> matchedUserIds = new ArrayList<>();
         for (Match match : matches) {
             if (userId.equals(match.getUserId1())) {
@@ -38,10 +41,21 @@ public class MatchRetrivalService {
             }
         }
 
+        if (matchedUserIds.isEmpty()) {
+            return Collections.emptyList(); // Ingen matcher funnet
+        }
+
+        // URL til ProfileManager-tjenesten
         String profileServiceUrl = "http://localhost:8080/api/profiles/by-ids";
 
-        HttpEntity<List<Long>> requestEntity = new HttpEntity<>(matchedUserIds);
+        // Lag en JSON-struktur for forespørselen
+        Map<String, List<Long>> requestBody = new HashMap<>();
+        requestBody.put("userIds", matchedUserIds);
 
+        // Lag en HttpEntity med requestBody
+        HttpEntity<Map<String, List<Long>>> requestEntity = new HttpEntity<>(requestBody);
+
+        // Gjør forespørselen til ProfileManager
         ResponseEntity<List<UserProfile>> response = restTemplate.exchange(
                 profileServiceUrl,
                 HttpMethod.POST,
@@ -52,6 +66,7 @@ public class MatchRetrivalService {
         return response.getBody();
     }
 }
+
 
 
 

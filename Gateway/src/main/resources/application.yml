@@ -9,18 +9,31 @@ spring:
   cloud:
     gateway:
       routes:
+        # ProfileManager service
         - id: profiles
           uri: lb://ProfileManager/
           predicates:
             - Path=/profiles,/profiles/**
+        # MatchingService
         - id: match
           uri: lb://MatchingService/
           predicates:
             - Path=/match,/match/**
+        # MatchRetrivalService
         - id: retrival
           uri: lb://MatchRetrivalService/
           predicates:
-          - Path=/matches,/matches/**
+            - Path=/matches,/matches/**
+        # MessageService
+        - id: messages
+          uri: lb://MessageService/
+          predicates:
+            - Path=/messages,/messages/**
+        # AuthenticationService
+        - id: auth
+          uri: lb://AuthentificationService/
+          predicates:
+            - Path=/auth,/auth/**
       globalcors:
         cors-configurations:
           '[/**]':
@@ -37,3 +50,15 @@ spring:
           args:
             retries: 3
             methods: GET, POST
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  health:
+    rabbit:
+      enabled: true
+    db:
+      enabled: true
+

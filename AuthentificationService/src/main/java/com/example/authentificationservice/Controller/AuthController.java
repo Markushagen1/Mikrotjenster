@@ -23,6 +23,7 @@ public class AuthController {
 
     @PostMapping("/register")
     public ResponseEntity<?> registerUser(@RequestBody User user) {
+        System.out.println("Register endpoint called with: " + user.getUsername());
         User newUser = authService.registerUser(user);
         return ResponseEntity.ok(newUser);
     }

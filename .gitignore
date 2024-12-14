@@ -1,33 +1,46 @@
+# Generelt
 HELP.md
+*.log
+
+# Maven genererte mapper
 target/
-!.mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
 
-### STS ###
-.apt_generated
-.classpath
-.factorypath
-.project
-.settings
-.springBeans
-.sts4-cache
+# Gradle genererte mapper
+build/
+!**/src/main/**/build/
+!**/src/test/**/build/
 
-### IntelliJ IDEA ###
-.idea
+# Maven Wrapper
+!.mvn/wrapper/maven-wrapper.jar
+
+# MacOS genererte filer
+.DS_Store
+
+# Node.js avhengigheter
+node_modules/
+
+# IntelliJ IDEA
+.idea/
 *.iws
 *.iml
 *.ipr
 
-### NetBeans ###
+# VS Code
+.vscode/
+
+# NetBeans
 /nbproject/private/
 /nbbuild/
 /dist/
 /nbdist/
 /.nb-gradle/
-build/
-!**/src/main/**/build/
-!**/src/test/**/build/
 
-### VS Code ###
-.vscode/
+# Spring Tools Suite (STS)
+/.apt_generated
+/.factorypath
+/.project
+/.settings
+/.springBeans
+/.sts4-cache
