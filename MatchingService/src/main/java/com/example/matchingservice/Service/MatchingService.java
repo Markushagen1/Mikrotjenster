@@ -99,11 +99,6 @@ public class MatchingService {
         logger.info("Matches retrieved for userId {}: {}", userId, matchedUserIds);
         return matchedUserIds;
     }
-
-
-    public Long extractUserIdFromToken(String token) {
-        return jwtUtil.extractUserId(token);
-    }
 }
 
 
