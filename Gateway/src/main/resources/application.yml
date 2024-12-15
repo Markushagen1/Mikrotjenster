@@ -1,0 +1,64 @@
+server:
+  port: 8000
+
+spring:
+  application:
+    name: gateway
+  config:
+    import: "optional:consul:"
+  cloud:
+    gateway:
+      routes:
+        # ProfileManager service
+        - id: profiles
+          uri: lb://ProfileManager/
+          predicates:
+            - Path=/profiles,/profiles/**
+        # MatchingService
+        - id: match
+          uri: lb://MatchingService/
+          predicates:
+            - Path=/match,/match/**
+        # MatchRetrivalService
+        - id: retrival
+          uri: lb://MatchRetrivalService/
+          predicates:
+            - Path=/matches,/matches/**
+        # MessageService
+        - id: messages
+          uri: lb://MessageService/
+          predicates:
+            - Path=/messages,/messages/**
+        # AuthenticationService
+        - id: auth
+          uri: lb://AuthentificationService/
+          predicates:
+            - Path=/auth,/auth/**
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowed-origins:
+              - "http://localhost:3000"
+            allowed-headers:
+              - "*"
+            allowed-methods:
+              - "GET"
+              - "POST"
+              - "OPTIONS"
+      default-filters:
+        - name: Retry
+          args:
+            retries: 3
+            methods: GET, POST
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  health:
+    rabbit:
+      enabled: true
+    db:
+      enabled: true
+
