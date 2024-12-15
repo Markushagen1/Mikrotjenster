@@ -1,0 +1,61 @@
+# Generelt
+HELP.md
+*.log
+
+# Miljøvariabler
+.env
+.env.*
+
+# Maven genererte mapper
+target/
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+# Gradle genererte mapper
+build/
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+# Maven Wrapper
+!.mvn/wrapper/maven-wrapper.jar
+
+# MacOS genererte filer
+.DS_Store
+.Trash/
+.AppleDouble
+.LSOverride
+
+# Node.js avhengigheter
+node_modules/
+
+# IntelliJ IDEA
+.idea/
+*.iws
+*.iml
+*.ipr
+
+# VS Code
+.vscode/
+
+# NetBeans
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+
+# Spring Tools Suite (STS)
+/.apt_generated
+/.factorypath
+/.project
+/.settings
+/.springBeans
+/.sts4-cache
+
+# Vim swapfiler
+*.swp
+*.swo
+
+# Andre editorfiler
+*.tmp
+~$*
