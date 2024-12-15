@@ -1,6 +1,19 @@
-version: '3.8'
-
 services:
+  # PostgreSQL Database
+  postgres-db:
+    image: postgres:15
+    container_name: postgres-db
+    environment:
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./init-scripts:/docker-entrypoint-initdb.d
+    networks:
+      - app-network
+
   # Authentification Service
   authentification-service:
     build:
@@ -9,26 +22,14 @@ services:
     ports:
       - "8083:8083"
     environment:
-      DB_URL: ${AUTH_DB_URL}
-      DB_USERNAME: ${DB_USERNAME}
-      DB_PASSWORD: ${DB_PASSWORD}
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-db:5432/auth_db
+      SPRING_DATASOURCE_USERNAME: ${DB_USERNAME}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
       JWT_SECRET_KEY: ${JWT_SECRET_KEY}
     depends_on:
-      - auth-db
-    networks:
-      - app-network
-
-  auth-db:
-    image: postgres:15
-    container_name: auth-db
-    environment:
-      POSTGRES_USER: ${DB_USERNAME}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-      POSTGRES_DB: auth_db
-    ports:
-      - "5432:5432"
-    volumes:
-      - auth-db-data:/var/lib/postgresql/data
+      - postgres-db
+      - rabbitmq
+      - consul
     networks:
       - app-network
 
@@ -40,17 +41,18 @@ services:
     ports:
       - "8080:8080"
     environment:
-      DB_URL: ${PROFILE_MANAGER_DB_URL}
-      DB_USERNAME: ${DB_USERNAME}
-      DB_PASSWORD: ${DB_PASSWORD}
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-db:5432/profile_manager
+      SPRING_DATASOURCE_USERNAME: ${DB_USERNAME}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
       JWT_SECRET_KEY: ${JWT_SECRET_KEY}
       RABBITMQ_HOST: ${RABBITMQ_HOST}
       RABBITMQ_PORT: ${RABBITMQ_PORT}
       RABBITMQ_USERNAME: ${RABBITMQ_USERNAME}
       RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD}
     depends_on:
+      - postgres-db
       - rabbitmq
-      - auth-db
+      - consul
     networks:
       - app-network
 
@@ -62,17 +64,18 @@ services:
     ports:
       - "8081:8081"
     environment:
-      DB_URL: ${MATCHING_MANAGER_DB_URL}
-      DB_USERNAME: ${DB_USERNAME}
-      DB_PASSWORD: ${DB_PASSWORD}
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-db:5432/matching_manager
+      SPRING_DATASOURCE_USERNAME: ${DB_USERNAME}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
       JWT_SECRET_KEY: ${JWT_SECRET_KEY}
       RABBITMQ_HOST: ${RABBITMQ_HOST}
       RABBITMQ_PORT: ${RABBITMQ_PORT}
       RABBITMQ_USERNAME: ${RABBITMQ_USERNAME}
       RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD}
     depends_on:
+      - postgres-db
       - rabbitmq
-      - auth-db
+      - consul
     networks:
       - app-network
 
@@ -84,12 +87,13 @@ services:
     ports:
       - "8087:8087"
     environment:
-      DB_URL: ${MATCH_RETRIEVAL_DB_URL}
-      DB_USERNAME: ${DB_USERNAME}
-      DB_PASSWORD: ${DB_PASSWORD}
-      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-db:5432/matching_manager
+      SPRING_DATASOURCE_USERNAME: ${DB_USERNAME}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
     depends_on:
-      - auth-db
+      - postgres-db
+      - rabbitmq
+      - consul
     networks:
       - app-network
 
@@ -101,17 +105,13 @@ services:
     ports:
       - "8084:8084"
     environment:
-      DB_URL: ${MESSAGE_SERVICE_DB_URL}
-      DB_USERNAME: ${DB_USERNAME}
-      DB_PASSWORD: ${DB_PASSWORD}
-      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
-      RABBITMQ_HOST: ${RABBITMQ_HOST}
-      RABBITMQ_PORT: ${RABBITMQ_PORT}
-      RABBITMQ_USERNAME: ${RABBITMQ_USERNAME}
-      RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD}
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-db:5432/message_service
+      SPRING_DATASOURCE_USERNAME: ${DB_USERNAME}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
     depends_on:
+      - postgres-db
       - rabbitmq
-      - auth-db
+      - consul
     networks:
       - app-network
 
@@ -127,8 +127,20 @@ services:
       - profile-manager
       - matching-service
       - message-service
+      - match-retrieval-service
     networks:
       - app-network
+
+  # Consul Service
+  consul:
+    image: hashicorp/consul:latest
+    container_name: consul
+    ports:
+      - "8500:8500"
+    command: "agent -dev -client=0.0.0.0"
+    networks:
+      - app-network
+
 
   # RabbitMQ Service
   rabbitmq:
@@ -144,7 +156,7 @@ services:
       - app-network
 
 volumes:
-  auth-db-data:
+  postgres-data:
 
 networks:
   app-network:

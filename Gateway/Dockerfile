@@ -1,11 +1,11 @@
 # Start with an OpenJDK base image
-FROM openjdk:17-jdk-slim
+FROM openjdk:21-jdk-slim
 
 # Set the working directory inside the container
 WORKDIR /app
 
 # Copy the jar file from your Maven build
-COPY target/Gateway-0.0.1-SNAPSHOT.jar app.jar
+COPY target/Gateway-0.0.1-SNAPSHOT.jar gateway.jar
 
 # Expose the port the gateway will run on
 EXPOSE 8000
