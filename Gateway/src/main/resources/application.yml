@@ -1,8 +1,7 @@
 spring:
   application:
     name: Gateway
-  config:
-    import: "optional:consul:http://consul:8500"
+
   cloud:
     gateway:
       routes:
