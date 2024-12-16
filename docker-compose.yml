@@ -25,11 +25,11 @@ services:
     container_name: consul
     ports:
       - "8500:8500"
-    command: "agent -dev -client=0.0.0.0"
+    command: "agent -dev -client=0.0.0.0 -log-level=WARN"
     networks:
       - app-network
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8500/v1/status/leader"]
+      test: [ "CMD", "curl", "-f", "http://localhost:8500/v1/status/leader" ]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -46,6 +46,8 @@ services:
       - "15672:15672"
     networks:
       - app-network
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
     healthcheck:
       test: [ "CMD", "rabbitmqctl", "status" ]
       interval: 10s
@@ -61,7 +63,7 @@ services:
     ports:
       - "8083:8083"
     environment:
-      SPRING_CONFIG_IMPORT: "consul:"
+      SPRING_CONFIG_IMPORT: "consul://consul:8500"
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-db:5432/auth_db
       SPRING_DATASOURCE_USERNAME: ${DB_USERNAME}
       SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
@@ -71,12 +73,11 @@ services:
         condition: service_healthy
       postgres-db:
         condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
     networks:
       - app-network
 
-
-
-  # Profile Manager Service
   # Profile Manager Service
   profile-manager:
     build:
@@ -85,7 +86,7 @@ services:
     ports:
       - "8080:8080"
     environment:
-      SPRING_CONFIG_IMPORT: "consul:"
+      SPRING_CONFIG_IMPORT: "consul://consul:8500"
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-db:5432/profile_manager
       SPRING_DATASOURCE_USERNAME: ${DB_USERNAME}
       SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
@@ -105,8 +106,6 @@ services:
       - app-network
 
 
-
-
   # Matching Service
   matching-service:
     build:
@@ -114,13 +113,26 @@ services:
     container_name: matching-service
     ports:
       - "8081:8081"
+    restart: on-failure
     environment:
-      <<: *service-env
+      SPRING_CONFIG_IMPORT: "consul:"
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-db:5432/matching_manager
+      SPRING_DATASOURCE_USERNAME: ${DB_USERNAME}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+      RABBITMQ_HOST: ${RABBITMQ_HOST}
+      RABBITMQ_PORT: ${RABBITMQ_PORT}
+      SPRING_RABBITMQ_USERNAME: ${RABBITMQ_USERNAME}
+      SPRING_RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
     depends_on:
-      - consul
-      - postgres-db
-      - rabbitmq
+      consul:
+        condition: service_healthy
+      postgres-db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      profile-manager:
+        condition: service_started
     networks:
       - app-network
 
@@ -132,11 +144,16 @@ services:
     ports:
       - "8087:8087"
     environment:
-      <<: *service-env
+      SPRING_CONFIG_IMPORT: "consul:"
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-db:5432/matching_manager
+      SPRING_DATASOURCE_USERNAME: ${DB_USERNAME}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
     depends_on:
-      - consul
-      - postgres-db
+      consul:
+        condition: service_healthy
+      postgres-db:
+        condition: service_healthy
     networks:
       - app-network
 
@@ -148,11 +165,22 @@ services:
     ports:
       - "8084:8084"
     environment:
-      <<: *service-env
+      SPRING_CONFIG_IMPORT: "consul:"
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-db:5432/message_service
+      SPRING_DATASOURCE_USERNAME: ${DB_USERNAME}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+      RABBITMQ_HOST: ${RABBITMQ_HOST}
+      RABBITMQ_PORT: ${RABBITMQ_PORT}
+      SPRING_RABBITMQ_USERNAME: ${RABBITMQ_USERNAME}
+      SPRING_RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
     depends_on:
-      - consul
-      - postgres-db
+      consul:
+        condition: service_healthy
+      postgres-db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
     networks:
       - app-network
 
@@ -186,6 +214,7 @@ services:
 
 volumes:
   postgres-data:
+  rabbitmq_data:
 
 networks:
   app-network:
