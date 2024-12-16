@@ -18,6 +18,7 @@ import java.util.*;
 
 @Service
 public class MatchRetrivalService {
+
     private final MatchRepo matchRepo;
     private final RestTemplate restTemplate;
 
@@ -46,7 +47,7 @@ public class MatchRetrivalService {
         }
 
         // URL til ProfileManager-tjenesten
-        String profileServiceUrl = "http://localhost:8080/api/profiles/by-ids";
+        String profileServiceUrl = "http://profile-manager:8080/api/profiles/by-ids";
 
         // Lag en JSON-struktur for forespørselen
         Map<String, List<Long>> requestBody = new HashMap<>();
@@ -66,7 +67,6 @@ public class MatchRetrivalService {
         return response.getBody();
     }
 }
-
 
 
 

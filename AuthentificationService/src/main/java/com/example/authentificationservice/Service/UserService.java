@@ -13,7 +13,6 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
@@ -58,18 +57,28 @@ public class UserService implements UserDetailsService {
 
     // Lagrer en ny bruker og krypterer passordet
     public User saveUser(User user) {
-        user.setPassword(passwordEncoder.encode(user.getPassword()));  // Krypterer passordet
+        // Krypterer passordet
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
 
         // Legger til rollen "ROLE_USER" som standard for nye brukere
         Set<Role> roles = new HashSet<>();
+
+        // Sjekk om rollen "ROLE_USER" finnes, og legg den til
         Role userRole = roleRepo.findByName("ROLE_USER")
-                .orElseThrow(() -> new RuntimeException("User Role not found."));
+                .orElseGet(() -> {
+                    // Hvis "ROLE_USER" ikke finnes, opprett den
+                    Role newUserRole = new Role("ROLE_USER");
+                    return roleRepo.save(newUserRole); // Lagre rollen i databasen
+                });
+
         roles.add(userRole);
         user.setRoles(roles);
 
         // Lagrer brukeren i databasen
         return userRepo.save(user);
     }
+
 }
+
 
 
